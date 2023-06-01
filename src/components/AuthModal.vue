@@ -5,7 +5,7 @@ import { storeToRefs } from "pinia"
 // store
 const userStore = useUserStore()
 // storeToRefs should only be ref values and not methods.
-const { errorMessage, loading } = storeToRefs(userStore)
+const { errorMessage, loading, user } = storeToRefs(userStore)
 
 const props = defineProps(['isLogin'])
 const visible = ref(false);
@@ -15,13 +15,23 @@ const userCredentials = reactive({
     password: '',
     username: ''
 })
-
 const showModal = () => {
     visible.value = true;
 };
 
-const handleOk = (e) => {
-    userStore.handleSignup(userCredentials)
+const clearUserCredentials = () => {
+    userCredentials.email = ""
+    userCredentials.password = ""
+    userCredentials.username = ""
+    userStore.clearErrorMessage()
+}
+
+const handleOk = async (e) => {
+    await userStore.handleSignup(userCredentials)
+    if (user.value) {
+        clearUserCredentials()
+        visible.value = false
+    }
 };
 
 const handleCancel = () => {
