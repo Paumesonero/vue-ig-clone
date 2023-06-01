@@ -5,6 +5,7 @@ import { supabase } from "../supabase"
 export const useUserStore = defineStore('users', () => {
   const user = ref(null);
   const errorMessage = ref('')
+  const loading = ref(false)
 
   const validateEmail = (email) => {
     return String(email)
@@ -38,6 +39,7 @@ export const useUserStore = defineStore('users', () => {
     // End Validations
 
     // Validate if user exists:
+    loading.value = true
 
     const checkUser = await supabase
       .from("users")
@@ -46,6 +48,7 @@ export const useUserStore = defineStore('users', () => {
       .single()
 
     if (checkUser.data) {
+      loading.value = false
       return errorMessage.value = "User already exists"
     }
 
@@ -58,6 +61,7 @@ export const useUserStore = defineStore('users', () => {
     })
 
     if (response.error) {
+      loading.value = false
       return errorMessage.value = response.error.message
     }
     // everytime we want to retrieve data from a table we use the . from(name of the table)
@@ -65,7 +69,7 @@ export const useUserStore = defineStore('users', () => {
       username,
       email
     })
-
+    loading.value = false
   }
   const handleLogout = () => {
 
@@ -74,6 +78,19 @@ export const useUserStore = defineStore('users', () => {
 
   }
 
+  const clearErrorMessage = () => {
+    errorMessage.value = ''
+  }
 
-  return { user, errorMessage, handleLogin, handleSignup, handleLogout, getUser }
+
+  return {
+    user,
+    errorMessage,
+    loading,
+    handleLogin,
+    handleSignup,
+    handleLogout,
+    getUser,
+    clearErrorMessage
+  }
 })
