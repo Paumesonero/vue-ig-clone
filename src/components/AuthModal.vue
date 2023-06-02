@@ -27,7 +27,16 @@ const clearUserCredentials = () => {
 }
 
 const handleOk = async (e) => {
-    await userStore.handleSignup(userCredentials)
+    if (props.isLogin) {
+        await userStore.handleLogin({
+            password: userCredentials.password,
+            email: userCredentials.email
+        })
+    }
+    else {
+        await userStore.handleSignup(userCredentials)
+    }
+
     if (user.value) {
         clearUserCredentials()
         visible.value = false
@@ -45,6 +54,7 @@ const title = props.isLogin ? 'Login' : 'Signup'
 
 <template>
     <div>
+        {{ user }}
         <a-button type="primary" @click="showModal" class="btn">{{ title }}</a-button>
         <a-modal v-model:visible="visible" :title="title" @ok="handleOk">
             <template #footer>
@@ -54,8 +64,9 @@ const title = props.isLogin ? 'Login' : 'Signup'
             </template>
             <div v-if="!loading" class="input-container">
                 <a-input class="input" v-if="!isLogin" v-model:value="userCredentials.username" placeholder="Username" />
-                <a-input class="input" v-model:value="userCredentials.password" placeholder="Password" type="password" />
                 <a-input class="input" v-model:value="userCredentials.email" placeholder="Email" />
+                <a-input class="input" v-model:value="userCredentials.password" placeholder="Password" type="password" />
+
             </div>
             <div v-else class="spinner">
                 <a-spin />

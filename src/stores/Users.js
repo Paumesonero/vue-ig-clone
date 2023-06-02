@@ -6,6 +6,7 @@ export const useUserStore = defineStore('users', () => {
   const user = ref(null);
   const errorMessage = ref('')
   const loading = ref(false)
+  const loadingUser = ref(false)
 
   const validateEmail = (email) => {
     return String(email)
@@ -15,12 +16,46 @@ export const useUserStore = defineStore('users', () => {
       );
   };
 
-  const handleLogin = () => {
+  const handleLogin = async (credentials) => {
+    const { password, email } = credentials
+    if (!validateEmail(email)) {
+      return errorMessage.value = 'Email Invalid'
+    }
+    if (!password.length) {
+      return errorMessage.value = 'Please add a password'
+    }
+    // now we call supabese so we start by loading
+    loading.value = true
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+    if (error) {
+      loading.value = false
+      return errorMessage.value = error.message
+    }
+
+    const { data: currentUser } = await supabase
+      .from("users")
+      .select()
+      .eq('email', email)
+      .single()
+
+    user.value = {
+      id: currentUser.id,
+      email: currentUser.email,
+      password: currentUser.password
+    }
+    console.log('this is the user:', user)
+    // here we clear out everything
+    loading.value = false
+    errorMessage.value = ''
 
   }
-
+  // ********** START SIGNUP *************
   const handleSignup = async (credentials) => {
     const { email, password, username } = credentials;
+
 
     // we do validations
     if (password.length < 6) {
@@ -35,7 +70,6 @@ export const useUserStore = defineStore('users', () => {
     if (!validateEmail(email)) {
       return errorMessage.value = 'Email Invalid'
     }
-
     // End Validations
 
     // Validate if user exists:
@@ -71,24 +105,49 @@ export const useUserStore = defineStore('users', () => {
     })
 
 
-    const { data: newUser } = await supabase
+    const newUser = await supabase
       .from("users")
       .select()
       .eq('email', email)
       .single()
 
     user.value = {
-      id: newUser.id,
-      email: newUser.email,
-      username: newUser.username
+      id: newUser.data.id,
+      email: newUser.data.email,
+      username: newUser.data.username
     }
     loading.value = false
   }
-  const handleLogout = () => {
 
+  //*********** FINISH SIGN UP *************
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    user.value = null
   }
-  const getUser = () => {
 
+  // ************ GETTING CURRENT USER ******************
+  const getUser = async () => {
+    loadingUser.value = true
+    const response = await supabase.auth.getUser()
+    if (!response.data) {
+      console.log('no response')
+      loadingUser.value = false
+      return user.value = null
+    }
+
+    const userWithEmail = await supabase
+      .from("users")
+      .select()
+      .eq("email", response.data.user.email)
+      .single()
+
+    user.value = {
+      username: userWithEmail.data.username,
+      email: userWithEmail.data.email,
+      id: userWithEmail.data.id,
+
+    }
+    loadingUser.value = false
   }
 
   const clearErrorMessage = () => {
@@ -100,6 +159,7 @@ export const useUserStore = defineStore('users', () => {
     user,
     errorMessage,
     loading,
+    loadingUser,
     handleLogin,
     handleSignup,
     handleLogout,
