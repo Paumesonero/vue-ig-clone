@@ -44,7 +44,9 @@ export const useUserStore = defineStore('users', () => {
     user.value = {
       id: currentUser.id,
       email: currentUser.email,
-      password: currentUser.password
+      password: currentUser.password,
+      username: currentUser.username
+
     }
     console.log('this is the user:', user)
     // here we clear out everything
@@ -129,7 +131,7 @@ export const useUserStore = defineStore('users', () => {
   const getUser = async () => {
     loadingUser.value = true
     const response = await supabase.auth.getUser()
-    if (!response.data) {
+    if (!response.data.user) {
       console.log('no response')
       loadingUser.value = false
       return user.value = null

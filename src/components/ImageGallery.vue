@@ -4,7 +4,8 @@ const { posts } = defineProps(['posts'])
 </script>
 <template>
     <div class="gallery-container">
-        <img v-for="el in posts" :key="el.id" :src="el.img" alt="elantris">
+        <img v-for="el in posts" :key="el.id"
+            :src="`https://suqeynrwubzivsrsaeyz.supabase.co/storage/v1/object/public/images/${el.url}`" alt="elantris">
     </div>
 </template>
 
