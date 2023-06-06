@@ -3,6 +3,7 @@ import UploadPhotoModal from './UploadPhotoModal.vue';
 import { useRoute } from 'vue-router'
 import { useUserStore } from "../stores/Users"
 import { storeToRefs } from 'pinia';
+import { supabase } from '../supabase';
 
 // we will compare the current user with the username in the url so only the 
 //user that is logged in can add photos to their profile.
@@ -13,17 +14,38 @@ const userStore = useUserStore()
 // here we grab the current user
 const { user } = storeToRefs(userStore)
 const { username: profileUserName } = route.params
-const { userInfo, addNewPost, searchedUser } = defineProps(['searchedUser', 'userInfo', 'addNewPost'])
+const { userInfo, addNewPost, searchedUser, isFollowing, updateIsFollowing } = defineProps(['searchedUser', 'userInfo', 'addNewPost', 'isFollowing', 'updateIsFollowing'])
 
-console.log('this is the userrrr!!!:', searchedUser)
 
+const followUser = async () => {
+    updateIsFollowing(true)
+    await supabase.from("followers_following").insert({
+        follower_id: user.value.id,
+        following_id: searchedUser.id
+    })
+}
+const unFollowUser = async () => {
+    updateIsFollowing(false)
+    await supabase.from("followers_following")
+        .delete()
+        .eq('follower_id', user.value.id)
+        .eq('following_id', searchedUser.id)
+}
 </script>
 
 <template>
     <div class="userbar-container" v-if="searchedUser">
         <div class="top-content">
             <h2>{{ searchedUser.username }}</h2>
-            <UploadPhotoModal v-if="user && profileUserName === user.username" :addNewPost="addNewPost" />
+            <div v-if="user">
+                <UploadPhotoModal v-if="profileUserName === user.username" :addNewPost="addNewPost" />
+                <div v-else>
+                    <a-button v-if="!isFollowing" @click="followUser">Follow</a-button>
+                    <a-button v-else @click="unFollowUser">Following</a-button>
+                </div>
+
+            </div>
+
         </div>
         <div class="bottom-content">
             <h5>{{ userInfo.posts }} posts</h5>

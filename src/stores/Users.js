@@ -48,7 +48,6 @@ export const useUserStore = defineStore('users', () => {
       username: currentUser.username
 
     }
-    console.log('this is the user:', user)
     // here we clear out everything
     loading.value = false
     errorMessage.value = ''
@@ -61,7 +60,6 @@ export const useUserStore = defineStore('users', () => {
 
     // we do validations
     if (password.length < 6) {
-      console.log('password short')
       return errorMessage.value = 'Password needs to be more than six characters'
     }
 
@@ -118,6 +116,7 @@ export const useUserStore = defineStore('users', () => {
       email: newUser.data.email,
       username: newUser.data.username
     }
+    console.log('this is the user, TESTING', user.value)
     loading.value = false
   }
 
@@ -132,7 +131,6 @@ export const useUserStore = defineStore('users', () => {
     loadingUser.value = true
     const response = await supabase.auth.getUser()
     if (!response.data.user) {
-      console.log('no response')
       loadingUser.value = false
       return user.value = null
     }
